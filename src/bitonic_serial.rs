@@ -1,4 +1,18 @@
-
+//! This module provides a serial implementation of the bitonic sort algorithm.
+//!
+//! The bitonic sort algorithm is a comparison-based sorting algorithm that works by dividing the input
+//! into two parts, sorting them independently, and then merging the results in a bitonic sequence.
+//! The algorithm has a time complexity of O(n log^2 n), where n is the number of elements to be sorted.
+//!
+//! # Examples
+//!
+//! ```
+//! use bitonic_sort::bitonic_serial::bitonic_sort;
+//!
+//! let mut nums = vec![4, 2, 7, 1, 5];
+//! bitonic_sort(&mut nums);
+//! assert_eq!(nums, vec![1, 2, 4, 5, 7]);
+//! ```
 /// Performs a bitonic sort on the given mutable slice of elements.
 ///
 /// The `bitonic_sort` function sorts the elements in ascending order by default.

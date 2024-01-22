@@ -1,4 +1,18 @@
-
+//! This module contains the implementation of a parallel bitonic sort algorithm.
+//!
+//! The `bitonic_sort` function sorts a given vector in ascending order using the bitonic sort algorithm.
+//! It supports parallel execution by dividing the sorting process into multiple threads.
+//!
+//! # Examples
+//!
+//! ```
+//! use bitonic_sort::bitonic_parallel::bitonic_sort;
+//!
+//! let mut nums = vec![4, 2, 7, 1, 5, 3, 6];
+//! let parallel = 2;
+//! bitonic_sort(&mut nums, parallel);
+//! assert_eq!(nums, vec![1, 2, 3, 4, 5, 6, 7]);
+//! ```
 /// This module contains the implementation of a parallel bitonic sort algorithm.
 ///
 /// The `bitonic_sort` function sorts a given vector in ascending order using the bitonic sort algorithm.
