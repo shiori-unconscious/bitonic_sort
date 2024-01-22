@@ -22,11 +22,12 @@
 ///
 /// ```
 /// use bitonic_sort::bitonic_serial::bitonic_sort;
-/// 
+///
 /// let mut nums = vec![4, 2, 7, 1, 5];
 /// bitonic_sort(&mut nums);
 /// assert_eq!(nums, vec![1, 2, 4, 5, 7]);
 /// ```
+use std::cell::Cell;
 
 pub fn bitonic_sort<T>(nums: &mut Vec<T>)
 where
@@ -47,8 +48,6 @@ where
     __bitonic_sort(&mut nums[..], false);
     nums.truncate(origin_len);
 }
-
-use std::cell::Cell;
 
 fn __bitonic_merge<T>(nums: &mut [T], reverse: bool)
 where

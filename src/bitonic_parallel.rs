@@ -28,26 +28,6 @@
 /// bitonic_sort(&mut nums, parallel);
 /// assert_eq!(nums, vec![1, 2, 3, 4, 5, 6, 7]);
 /// ```
-
-pub fn bitonic_sort<T>(nums: &mut Vec<T>, parallel: u8)
-where
-    T: PartialOrd + Copy + Send + Sync,
-{
-    if nums.is_empty() {
-        return;
-    }
-    let origin_len = nums.len();
-    if !origin_len.is_power_of_two() {
-        let max = *nums.iter().fold(
-            nums.first().unwrap(),
-            |max, x| if max.ge(x) { max } else { x },
-        );
-        nums.resize(origin_len.next_power_of_two(), max);
-    }
-    __bitonic_sort(&mut nums[..], false, parallel);
-    nums.truncate(origin_len);
-}
-
 use std::sync::Arc;
 use std::{mem, slice, thread};
 
@@ -60,6 +40,27 @@ impl<T> Clone for SliceWrapper<T> {
     }
 }
 impl<T> Copy for SliceWrapper<T> {}
+
+pub fn bitonic_sort<T>(nums: &mut Vec<T>, mut parallel: u8)
+where
+    T: PartialOrd + Copy + Send + Sync,
+{
+    if nums.is_empty() {
+        return;
+    }
+    parallel = parallel.checked_next_power_of_two().unwrap_or(u8::MAX);
+    let origin_len = nums.len();
+    if !origin_len.is_power_of_two() {
+        let max = *nums.iter().fold(
+            nums.first().unwrap(),
+            |max, x| if max > x { max } else { x },
+        );
+        nums.resize(origin_len.next_power_of_two(), max);
+    }
+    __bitonic_sort(&mut nums[..], false, parallel);
+    nums.truncate(origin_len);
+}
+
 fn __bitonic_merge<T>(nums: &mut [T], reverse: bool, mut parallel: u8)
 where
     T: PartialOrd + Copy + Send + Sync,
