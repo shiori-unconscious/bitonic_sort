@@ -28,9 +28,10 @@
 /// bitonic_sort(&mut nums, parallel);
 /// assert_eq!(nums, vec![1, 2, 3, 4, 5, 6, 7]);
 /// ```
+///
+use std::cell::Cell;
 use std::sync::Arc;
 use std::{mem, slice, thread};
-
 struct SliceWrapper<T: ?Sized>(*mut T);
 unsafe impl<T> Send for SliceWrapper<T> {}
 unsafe impl<T> Sync for SliceWrapper<T> {}
@@ -66,9 +67,19 @@ where
     T: PartialOrd + Copy + Send + Sync,
 {
     let len = nums.len();
-    let size = len / (2 * parallel as usize);
+    if parallel <= 1 {
+        let slice = Cell::from_mut(&mut nums[..]).as_slice_of_cells();
+        for (num1, num2) in slice[..len / 2].iter().zip(slice[len / 2..].iter()) {
+            if (num1.get() > num2.get()) ^ reverse {
+                Cell::swap(num1, num2);
+            }
+        }
+        return;
+    }
+    let mut size = len / (2 * parallel as usize);
     if size == 0 {
         parallel = (len / 2) as u8;
+        size = 1;
     }
     let shared_nums = Arc::new(SliceWrapper(nums.as_mut_ptr()));
     thread::scope(|s| {
@@ -101,8 +112,26 @@ where
     if len <= 1 {
         return;
     }
-    __bitonic_sort(&mut nums[..len / 2], false, parallel);
-    __bitonic_sort(&mut nums[len / 2..], true, parallel);
+    let share_nums = Arc::new(SliceWrapper(nums.as_mut_ptr()));
+    if parallel <= 1 {
+        __bitonic_sort(&mut nums[..len / 2], false, parallel);
+        __bitonic_sort(&mut nums[len / 2..], true, parallel);
+    } else {
+        thread::scope(|s| {
+            let nums = share_nums.clone();
+            s.spawn(move || {
+                let nums =
+                    unsafe { slice::from_raw_parts_mut(nums.0, len).get_unchecked_mut(..len / 2) };
+                __bitonic_sort(nums, false, parallel / 2);
+            });
+            let nums = share_nums.clone();
+            s.spawn(move || {
+                let nums =
+                    unsafe { slice::from_raw_parts_mut(nums.0, len).get_unchecked_mut(len / 2..) };
+                __bitonic_sort(nums, true, parallel / 2);
+            });
+        });
+    }
     let mut size = len;
     while size > 1 {
         for i in 0..len / size {
